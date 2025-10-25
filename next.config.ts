@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    domains: ["example.com", "localhost", "images.unsplash.com", "picsum.photos"], // dozvoljene domene
+  },
 };
 
 export default nextConfig;
