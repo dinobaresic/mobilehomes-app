@@ -13,15 +13,18 @@ export default function OwnerDashboard() {
   const [confirmMessage, setConfirmMessage] = useState("");
   const [editParcel, setEditParcel] = useState<any | null>(null);
 
+  // 🔹 Uzimamo API URL iz .env (radi i lokalno i na Vercelu)
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+
   const ownerId = 2; // privremeno — zamijenit će se ID-jem ulogiranog usera
 
   // 🔹 Dohvati sve parcele vlasnika
   useEffect(() => {
     axios
-      .get(`http://localhost:8080/api/parcels/owner/${ownerId}`)
+      .get(`${API_URL}/parcels/owner/${ownerId}`)
       .then((res) => setParcels(res.data))
-      .catch((err) => console.error(err));
-  }, []);
+      .catch((err) => console.error("❌ Greška kod dohvata parcela:", err));
+  }, [API_URL]);
 
   // 🔹 Označi ili ukloni parcelu iz selekcije
   const toggleSelect = (id: number) => {
@@ -30,16 +33,16 @@ export default function OwnerDashboard() {
     );
   };
 
-  // 🔹 Brisanje jedne parcele — koristi modal
+  // 🔹 Brisanje jedne parcele
   const deleteParcel = (id: number) => {
     setConfirmMessage("Jeste li sigurni da želite obrisati ovu parcelu?");
     setConfirmAction(() => async () => {
       try {
-        await axios.delete(`http://localhost:8080/api/parcels/${id}`);
+        await axios.delete(`${API_URL}/parcels/${id}`);
         setParcels((prev) => prev.filter((p) => p.id !== id));
         setMessage("✅ Parcela obrisana.");
       } catch (err) {
-        console.error(err);
+        console.error("❌ Greška pri brisanju parcele:", err);
         setMessage("❌ Greška pri brisanju parcele.");
       } finally {
         setShowConfirm(false);
@@ -48,20 +51,20 @@ export default function OwnerDashboard() {
     setShowConfirm(true);
   };
 
-  // 🔹 Brisanje više odjednom — koristi isti modal
+  // 🔹 Brisanje više odjednom
   const deleteSelected = () => {
     if (selected.length === 0) return alert("Nema označenih parcela.");
     setConfirmMessage("Jeste li sigurni da želite obrisati označene parcele?");
     setConfirmAction(() => async () => {
       try {
         await Promise.all(
-          selected.map((id) => axios.delete(`http://localhost:8080/api/parcels/${id}`))
+          selected.map((id) => axios.delete(`${API_URL}/parcels/${id}`))
         );
         setParcels((prev) => prev.filter((p) => !selected.includes(p.id)));
         setSelected([]);
         setMessage("✅ Označene parcele obrisane.");
       } catch (err) {
-        console.error(err);
+        console.error("❌ Greška pri brisanju označenih parcela:", err);
         setMessage("❌ Greška pri brisanju označenih parcela.");
       } finally {
         setShowConfirm(false);
@@ -76,7 +79,7 @@ export default function OwnerDashboard() {
 
     try {
       const res = await axios.put(
-        `http://localhost:8080/api/parcels/${editParcel.id}`,
+        `${API_URL}/parcels/${editParcel.id}`,
         updatedData
       );
       setParcels((prev) =>
@@ -84,7 +87,7 @@ export default function OwnerDashboard() {
       );
       setMessage("✅ Parcela uspješno ažurirana!");
     } catch (err) {
-      console.error(err);
+      console.error("❌ Greška pri ažuriranju parcele:", err);
       setMessage("❌ Greška pri ažuriranju parcele!");
     } finally {
       setEditParcel(null);
@@ -105,7 +108,9 @@ export default function OwnerDashboard() {
         )}
       </div>
 
-      {message && <p className="mb-4 text-center text-sm text-gray-700">{message}</p>}
+      {message && (
+        <p className="mb-4 text-center text-sm text-gray-700">{message}</p>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {parcels.map((parcel) => (
@@ -135,7 +140,9 @@ export default function OwnerDashboard() {
             )}
 
             <div className="p-4">
-              <h2 className="text-lg font-bold text-gray-800 mb-1">{parcel.title}</h2>
+              <h2 className="text-lg font-bold text-gray-800 mb-1">
+                {parcel.title}
+              </h2>
               <p className="text-sm text-gray-600">{parcel.location}</p>
               <p className="text-green-600 font-semibold mt-2">
                 💶 {parcel.pricePerYear} € / godišnje
